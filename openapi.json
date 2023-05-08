@@ -1,0 +1,502 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "My API",
+    "version": "1.0.0",
+    "description": "A simple Express API"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000/auth",
+      "description": "Authentication related endpoints"
+    },
+    {
+      "url": "http://localhost:3000/api",
+      "description": "API related endpoints"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "UserRegistrationRequest": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        },
+        "required": ["username", "password"]
+      },
+      "UserLoginRequest": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        },
+        "required": ["username", "password"]
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          }
+        }
+      },
+
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Error message"
+          }
+        }
+      },
+      "SupplyChainItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Item ID"
+          },
+          "name": {
+            "type": "string",
+            "description": "Item name"
+          },
+          "color": {
+            "type": "string",
+            "description": "Item color"
+          },
+          "price": {
+            "type": "number",
+            "description": "Item price"
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupplyChainItemEvent"
+            }
+          }
+        }
+      },
+      "AddSupplyChainItem": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Item name"
+          },
+          "color": {
+            "type": "string",
+            "description": "Item color"
+          },
+          "price": {
+            "type": "number",
+            "description": "Item price"
+          }
+        }
+      },
+      "SupplyChainItemEvent": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Event ID"
+          },
+          "location": {
+            "type": "string",
+            "description": "Event location"
+          },
+          "custodian": {
+            "type": "string",
+            "description": "Event custodian"
+          }
+        }
+      },
+      "AddSupplyChainItemEvent": {
+        "type": "object",
+        "properties": {
+          "supplyChainItemId": {
+            "type": "string",
+            "description": "ID of the item to add an event to"
+          },
+          "location": {
+            "type": "string",
+            "description": "Event location"
+          },
+          "custodian": {
+            "type": "string",
+            "description": "Event custodian"
+          }
+        },
+        "required": ["supplyChainItemId", "location", "custodian"]
+      }
+    }
+  },
+  "paths": {
+    "/register": {
+      "post": {
+        "tags": ["Users"],
+        "summary": "Registers a new user",
+        "description": "Registers a new user with the provided username and password",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "User successfully registered",
+            "schema": {
+              "$ref": "#/components/schemas/User"
+            }
+          },
+          "400": {
+            "description": "Bad request error",
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserRegistrationRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/login": {
+      "post": {
+        "tags": ["Users"],
+        "summary": "Logs in a user",
+        "description": "Logs in a user with the provided username and password",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "User successfully logged in",
+            "schema": {
+              "$ref": "#/components/schemas/User"
+            }
+          },
+          "401": {
+            "description": "Unauthorized user",
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserLoginRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/items": {
+      "get": {
+        "summary": "Retrieve all supply chain items",
+        "tags": ["Supply Chain Items"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of all supply chain items",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SupplyChainItem"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new supply chain item",
+        "tags": ["Supply Chain Items"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddSupplyChainItem"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The created supply chain item",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplyChainItem"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/items/{id}": {
+      "put": {
+        "summary": "Update supply chain item reference data",
+        "tags": ["Supply Chain Items"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the supply chain item to update",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSupplyChainItem"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The updated supply chain item",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplyChainItem"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/items/{id}/events": {
+      "get": {
+        "summary": "Get all events of a supply chain item",
+        "tags": ["Supply Chain Item Events"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the supply chain item",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "An array of all events of the supply chain item",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SupplyChainItemEvent"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Supply chain item not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "summary": "Add new events associated with an item",
+        "tags": ["Supply Chain Item Events"],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "description": "ID of the supply chain item to add events to",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddSupplyChainItemEvent"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The created supply chain item event",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplyChainItemEvent"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request error",
+            "content": {
+              "application/json": {
+                "$ref": "#/components/schemas/ErrorResponse"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/items/{id}/last-event": {
+      "get": {
+        "summary": "Get the last event associated with a supply chain item",
+        "tags": ["Supply Chain Item Events"],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "description": "ID of the supply chain item to get the last event for",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The last event associated with the specified supply chain item",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplyChainItemEvent"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Supply chain item not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    }
+  }
+}
